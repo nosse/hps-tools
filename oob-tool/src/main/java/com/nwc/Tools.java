@@ -71,8 +71,8 @@ public class Tools {
 
   
   public static String transformFilename(String filename, String extension) {
-    String postfix = "_alt";
-    String prefix = "";
+    String postfix = "";
+    String prefix = "z_M10_CS";
     String[] split = filename.split("\\.");    
     String ext = split[1]; 
     if(extension != null) {

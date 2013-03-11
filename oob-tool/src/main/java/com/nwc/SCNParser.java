@@ -29,9 +29,11 @@ public class SCNParser {
 
   public SCNParser(File in, String oldOOB, HashMap<String, OOBModification> modifications) {
     this.inputFile = in;
-    outFile = new File(in.getParentFile(), Tools.transformFilename(inputFile.getName()));
+    File outDir = new File(in.getParentFile(), "out");
+    outDir.mkdirs();
+    outFile = new File(outDir, Tools.transformFilename(inputFile.getName()));
     outFile.delete();
-    logFile = new File(in.getParentFile(), Tools.transformFilename(inputFile.getName(), "log"));
+    logFile = new File(outDir, Tools.transformFilename(inputFile.getName(), "log"));
     logFile.delete();
     this.oldOOB = oldOOB;
     this.modifications = modifications;
@@ -105,8 +107,7 @@ public class SCNParser {
             } else {
               lines.add(line);
             }
-          }
-          else if (line.startsWith("2 ")) {
+          } else if (line.startsWith("2 ")) {
             List<String> rows = new ArrayList<String>();
             String[] reinfLine = line.split(" ");
             int units = Integer.parseInt(reinfLine[10]);
@@ -124,10 +125,10 @@ public class SCNParser {
                   split[3] = Integer.toString(newSize);
                   rows.add("    " + StringUtils.join(split, " "));
                 }
-              }else {
+              } else {
                 rows.add("    " + StringUtils.join(split, " "));
               }
-            }            
+            }
             reinfLine[10] = Integer.toString(rows.size());
             lines.add(StringUtils.join(reinfLine, " "));
             lines.addAll(rows);
@@ -164,8 +165,9 @@ public class SCNParser {
         }
       }
     }
-    Tools.writeTextFile(logFile, linesToRemove);
-
+    if (!linesToRemove.isEmpty()) {
+      Tools.writeTextFile(logFile, linesToRemove);
+    }
     lines.removeAll(linesToRemove);
     Tools.writeTextFile(outFile, lines);
     return true;
@@ -175,11 +177,11 @@ public class SCNParser {
     File baseDir = new File("c:\\oob\\eckmuhl");
     OOBParser parser = new OOBParser(new File(baseDir, "eckmuhl.oob"));
     parser.parse();
-    HashMap<String, OOBModification> modifications = parser.modifyOOB();
+    HashMap<String, OOBModification> eckmuhl = parser.modifyOOB();
     parser.printOOB();
     for(File file : baseDir.listFiles()) {
       if (file.getName().endsWith(".scn")) {
-        SCNParser scnparser = new SCNParser(file, "eckmuhl.oob", modifications);
+        SCNParser scnparser = new SCNParser(file, "eckmuhl.oob", eckmuhl);
         scnparser.parse();
       }
     }

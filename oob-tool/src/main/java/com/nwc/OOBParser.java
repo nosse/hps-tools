@@ -33,9 +33,11 @@ public class OOBParser {
 
   public OOBParser(File inputFile) {
     this.inputFile = inputFile;
-    newOOBFile = new File(inputFile.getParentFile(), Tools.transformFilename(inputFile.getName()));
+    File outDir = new File(inputFile.getParentFile(), "out");        
+    outDir.mkdirs();
+    newOOBFile = new File(outDir, Tools.transformFilename(inputFile.getName()));
     newOOBFile.delete();
-    changesFile = new File(inputFile.getParentFile(), Tools.transformFilename(inputFile.getName(), "obc"));
+    changesFile = new File(outDir, Tools.transformFilename(inputFile.getName(), "obc"));
     changesFile.delete();
   }
 
