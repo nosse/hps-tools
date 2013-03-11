@@ -78,7 +78,7 @@ public class OOBParser {
     for(Formation formation : formations) {
       createSQDSandDivideUnits(formation, addedUnits);
     }
-    List<String> lines = new ArrayList<>();
+    List<String> lines = new ArrayList<String>();
     for(OOBModification id : addedUnits.values()) {            
       StringBuilder sb = new StringBuilder(id.getOobId() + ":" + id.getSize());
       for(String entry : id.getNewUnits().keySet()) {
