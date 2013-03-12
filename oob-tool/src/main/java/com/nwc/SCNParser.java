@@ -23,20 +23,19 @@ public class SCNParser {
   private File inputFile;
   private File outFile;
   private File logFile;
-  private String oldOOB;
+  
   private HashMap<String, OOBModification> modifications;
   private HashMap<String, String> sqdsPlaced;
+  private HashMap<String, HashMap<String, OOBModification>> oobs;
 
-  public SCNParser(File in, String oldOOB, HashMap<String, OOBModification> modifications) {
+  public SCNParser(File in, File outDir, HashMap<String, HashMap<String, OOBModification>> oobs) {
     this.inputFile = in;
-    File outDir = new File(in.getParentFile(), "out");
+    this.oobs = oobs;
     outDir.mkdirs();
     outFile = new File(outDir, Tools.transformFilename(inputFile.getName()));
     outFile.delete();
     logFile = new File(outDir, Tools.transformFilename(inputFile.getName(), "log"));
     logFile.delete();
-    this.oldOOB = oldOOB;
-    this.modifications = modifications;
     sqdsPlaced = new LinkedHashMap<String, String>();
   }
 
@@ -56,9 +55,10 @@ public class SCNParser {
           split[8] = Integer.toString(turns);
           lines.add(StringUtils.join(split, " "));
         } else if (index == 8) {
-          if (line.equalsIgnoreCase(oldOOB)) {
+          if(oobs.containsKey(line.toLowerCase())) {
             lines.add(Tools.transformFilename(line));
-          } else {
+            modifications = oobs.get(line.toLowerCase());
+          }else {
             return false;
           }
         } else if (index == 9) {
@@ -74,8 +74,8 @@ public class SCNParser {
             OOBModification modification = modifications.get(id);
             if (modification != null) {
               //Squadron
-              int oldOOBSize = Integer.parseInt(modification.getSize());
-              double strength = scenarioSize / oldOOBSize;
+              //int oldOOBSize = Integer.parseInt(modification.getSize());
+              //double strength = scenarioSize / oldOOBSize;
               if (split[7].equals("33816576")) {
                 int placedMen = 0;
                 for(String unit : modification.getNewUnits().keySet()) {
@@ -165,25 +165,11 @@ public class SCNParser {
         }
       }
     }
-    if (!linesToRemove.isEmpty()) {
-      Tools.writeTextFile(logFile, linesToRemove);
-    }
+//    if (!linesToRemove.isEmpty()) {
+//      Tools.writeTextFile(logFile, linesToRemove);
+//    }
     lines.removeAll(linesToRemove);
     Tools.writeTextFile(outFile, lines);
     return true;
-  }
-
-  public static void main(String[] args) {
-    File baseDir = new File("c:\\oob\\eckmuhl");
-    OOBParser parser = new OOBParser(new File(baseDir, "eckmuhl.oob"));
-    parser.parse();
-    HashMap<String, OOBModification> eckmuhl = parser.modifyOOB();
-    parser.printOOB();
-    for(File file : baseDir.listFiles()) {
-      if (file.getName().endsWith(".scn")) {
-        SCNParser scnparser = new SCNParser(file, "eckmuhl.oob", eckmuhl);
-        scnparser.parse();
-      }
-    }
   }
 }

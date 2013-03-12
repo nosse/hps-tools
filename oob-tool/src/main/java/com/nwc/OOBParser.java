@@ -31,9 +31,8 @@ public class OOBParser {
   public static final String[] Nationalities = new String[]{ "French", "British", "Prussian", "Austrian", "Russian", "Swedish" };
   String version;
 
-  public OOBParser(File inputFile) {
+  public OOBParser(File inputFile, File outDir) {
     this.inputFile = inputFile;
-    File outDir = new File(inputFile.getParentFile(), "out");        
     outDir.mkdirs();
     newOOBFile = new File(outDir, Tools.transformFilename(inputFile.getName()));
     newOOBFile.delete();
@@ -89,7 +88,7 @@ public class OOBParser {
 //      System.out.println(sb.toString());
       lines.add(sb.toString());
     }
-    Tools.writeTextFile(changesFile, lines);
+    //Tools.writeTextFile(changesFile, lines);
     return addedUnits;
   }
 
@@ -209,7 +208,7 @@ public class OOBParser {
   }
 
   public static void main(String[] args) {
-    OOBParser parser = new OOBParser(new File("c:\\oob\\eckmuhl.oob"));
+    OOBParser parser = new OOBParser(new File("c:\\oob\\eckmuhl.oob"), new File("c:\\oob\\eckmuhl\\out"));
     parser.parse();
     parser.modifyOOB();
     //parser.printOOBIDs();
