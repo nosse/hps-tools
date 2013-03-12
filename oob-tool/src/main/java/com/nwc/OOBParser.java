@@ -9,13 +9,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.nwc.model.oob.Formation;
 import com.nwc.model.oob.Leader;
-import com.nwc.model.oob.OOBModification;
 import com.nwc.model.oob.SupplyWagons;
 import com.nwc.model.oob.Unit;
 
@@ -74,106 +71,33 @@ public class OOBParser {
     }
   }
 
-  public HashMap<String, OOBModification> modifyOOB() {
-    HashMap<String, OOBModification> addedUnits = new LinkedHashMap<String, OOBModification>();
-    for(Formation formation : formations) {
-      createSQDSandDivideUnits(formation, addedUnits);
-    }
+  public void printOOBIDs() {
     List<String> lines = new ArrayList<String>();
-    for(OOBModification id : addedUnits.values()) {            
-      StringBuilder sb = new StringBuilder(id.getOobId() + ":" + id.getSize());
-      for(String entry : id.getNewUnits().keySet()) {
-        sb.append(" " + entry + ":" + id.getNewUnits().get(entry));
-      }
-//      System.out.println(sb.toString());
-      lines.add(sb.toString());
+    String padding = "";
+    for(Formation formation : formations) {
+      printOOBEntityIds(formation, null, padding, lines);
     }
-    //Tools.writeTextFile(changesFile, lines);
-    return addedUnits;
+    for(SupplyWagons sw : wagons) {
+      lines.add(sw.getOobId() + " " + sw.getName());
+    }
+    Tools.writeTextFile(newOOBFile, lines);
   }
-
-  private void createSQDSandDivideUnits(Formation formation, HashMap<String, OOBModification> addedUnits) {
+  private void printOOBEntityIds(Formation formation, String nationality, String padding, List<String> lines) {
+    lines.add(padding + formation.getOobId() + " " + formation.getName());
+    padding = padding + "\t";
+    for(Leader leader : formation.getLeaders()) {
+      lines.add(padding + leader.getOobId() + " " + leader.getName());
+    }
     for(Formation subFormation : formation.getSubFormations()) {
-      createSQDSandDivideUnits(subFormation, addedUnits);
+      printOOBEntityIds(subFormation, nationality, padding, lines);
     }
-    if (!formation.getUnits().isEmpty()) {
-      String oobId = formation.getUnits().get(0).getOobId();
-      String baseOOBId = oobId.substring(0, oobId.length() - 1);
-      int index = Integer.parseInt(oobId.substring(oobId.length() - 1, oobId.length()));
-      List<Unit> newUnits = new ArrayList<Unit>();
-      for(Unit unit : formation.getUnits()) {
-        HashMap<String, Integer> newIds = new LinkedHashMap<String, Integer>();
-        if (unit.isCavalry()) {
-          int divider = 4;
-          if (unit.getNationality().equals("Austrian")) {
-            divider = 6;
-            if (unit.getUnitType().equals("L")) {
-              divider = 8;
-            }
-          }
-          int unitSize = Integer.parseInt(unit.getSize());
-          int rest = unitSize % divider;
-          int newSize = unitSize / divider;
-          for(int i = 1; i <= divider; i++) {
-            Unit squad = new Unit(unit.getLine(), unit.getNationality(), unit.getOobId());
-            squad.setName(i + "/" + unit.getName());
-            int sqnSize = newSize;
-            if (rest > 0) {
-              sqnSize = newSize + 1;
-              rest--;
-            }
-            squad.setSize(Integer.toString(sqnSize));
-            squad.setOobId(baseOOBId + index);
-            newIds.put(baseOOBId + index, sqnSize);
-            index++;
-            newUnits.add(squad);
-          }
-          OOBModification mod = new OOBModification(unit.getOobId(), unit.getSize());
-          mod.setNewUnits(newIds);
-          addedUnits.put(unit.getOobId(), mod);
-        } else {
-          if (!(baseOOBId + index).equals(unit.getOobId())) {
-            OOBModification mod = new OOBModification(unit.getOobId(), unit.getSize());
-            newIds.put(baseOOBId + index, Integer.parseInt(unit.getSize()));
-            mod.setNewUnits(newIds);
-            addedUnits.put(unit.getOobId(), mod);
-          }
-          unit.setOobId(baseOOBId + index);
-          index++;
-          newUnits.add(unit);
-        }
-      }
-      formation.setUnits(newUnits);
+    for(Unit unit : formation.getUnits()) {
+      lines.add(padding + unit.getOobId() + " " + unit.getName());
+    }
+    for(SupplyWagons sw : formation.getWagons()) {
+      lines.add(padding + sw.getOobId() + " " + sw.getName());
     }
   }
-
-//  private void printOOBIDs() {
-//    List<String> lines = new ArrayList<String>();
-//    String padding = "";
-//    for(Formation formation : formations) {
-//      printOOBEntityIds(formation, null, padding, lines);
-//    }
-//    for(SupplyWagons sw : wagons) {
-//      lines.add(sw.getOobId() + " " + sw.getName());
-//    }
-//    writeTextFile(newOOBFile, lines);
-//  }
-//  private void printOOBEntityIds(Formation formation, String nationality, String padding, List<String> lines) {
-//    lines.add(padding + formation.getOobId() + " " + formation.getName());
-//    padding = padding + "\t";
-//    for(Leader leader : formation.getLeaders()) {
-//      lines.add(padding + leader.getOobId() + " " + leader.getName());
-//    }
-//    for(Formation subFormation : formation.getSubFormations()) {
-//      printOOBEntityIds(subFormation, nationality, padding, lines);
-//    }
-//    for(Unit unit : formation.getUnits()) {
-//      lines.add(padding + unit.getOobId() + " " + unit.getName());
-//    }
-//    for(SupplyWagons sw : formation.getWagons()) {
-//      lines.add(padding + sw.getOobId() + " " + sw.getName());
-//    }
-//  }
 
   public void printOOB() {
     List<String> lines = new ArrayList<String>();
@@ -210,8 +134,7 @@ public class OOBParser {
   public static void main(String[] args) {
     OOBParser parser = new OOBParser(new File("c:\\oob\\eckmuhl.oob"), new File("c:\\oob\\eckmuhl\\out"));
     parser.parse();
-    parser.modifyOOB();
-    //parser.printOOBIDs();
+    parser.printOOBIDs();
     parser.printOOB();
   }
 
