@@ -59,7 +59,9 @@ public class SCNParser {
             lines.add(Tools.transformFilename(line));
             modifications = oobs.get(line.toLowerCase());
           }else {
-            return false;
+            // just modify PDT etc
+            lines.add(line);
+            modifications = new LinkedHashMap<String, OOBModification>();
           }
         } else if (index == 9) {
           lines.add(Tools.transformFilename(line));

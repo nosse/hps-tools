@@ -30,6 +30,12 @@ public class Eckmuhl {
       }
     }
     for(File file : baseDir.listFiles()) {
+      if (file.getName().endsWith(".pdt")) {
+        PDTParser pdtparser = new PDTParser(file,outDir);
+        pdtparser.parse();
+      }      
+    }
+    for(File file : baseDir.listFiles()) {
       if (file.getName().endsWith(".scn")) {
         SCNParser scnparser = new SCNParser(file,outDir, oobs);
         scnparser.parse();
